@@ -83,16 +83,17 @@ jobs:
         echo "Running automated builds for ${matrix.language}"
         # Add your build commands here, for example:
         # mvn clean install
-   - name: Manual Build
-    if: matrix.build-mode == 'manual'
-    run: |
-      echo 'You are using a "manual" build mode for ${matrix.language}.'
-      # Replace below with actual commands to configure and build your C/C++ project
-      # Example of typical build commands for a C/C++ project:
-      make clean     # Clean the build directory
-      make bootstrap # Configure the project
-      make release   # Build the release version of the project
-      # If the build should fail, GitHub Actions will catch the non-zero exit code and fail the step automatically
+     
+    - name: Manual Build
+      if: matrix.build-mode == 'manual'
+      run: |
+        echo 'You are using a "manual" build mode for ${matrix.language}.'
+        # Replace below with actual commands to configure and build your C/C++ project
+        # Example of typical build commands for a C/C++ project:
+        make clean     # Clean the build directory
+        make bootstrap # Configure the project
+        make release   # Build the release version of the project
+        # If the build should fail, GitHub Actions will catch the non-zero exit code and fail the step automatically
 
 
     - name: Perform CodeQL Analysis
