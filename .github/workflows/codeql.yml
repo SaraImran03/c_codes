@@ -1,0 +1,44 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '41 4 * * 6'
+
+jobs:
+  analyze:
+    name: Analyze C/C++ Code
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: 'c-cpp'
+            build-mode: 'manual'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+
+    - if: matrix.build-mode == 'manual'
+      name: Build Project
+      run: |
+        gcc -o myproject sourcefile1.c sourcefile2.c -I include-directory -L library-directory -l library
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
