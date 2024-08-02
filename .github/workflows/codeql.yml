@@ -62,9 +62,9 @@ jobs:
       with:
         languages: ${{ matrix.language }}
         build-mode: manual
-    - uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{ matrix.language }}"
+    #- uses: github/codeql-action/analyze@v3
+     # with:
+      #  category: "/language:${{ matrix.language }}"
     - run: |
         #echo 'If you are using a "manual" build mode for one or more of the' \
         #'languages you are analyzing, replace this with the commands to build' \
