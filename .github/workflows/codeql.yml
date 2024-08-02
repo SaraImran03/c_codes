@@ -78,7 +78,7 @@ jobs:
     - if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        echo %/home/runner/work/c_codes/code1.c%
+        echo %code1.c%
         #echo 'If you are using a "manual" build mode for one or more of the' \
           #'languages you are analyzing, replace this with the commands to build' \
           #'your code, for example:'
