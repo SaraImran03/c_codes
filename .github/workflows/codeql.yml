@@ -65,6 +65,13 @@ jobs:
     - uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{ matrix.language }}"
+    - run: |
+        #echo 'If you are using a "manual" build mode for one or more of the' \
+        #'languages you are analyzing, replace this with the commands to build' \
+        #your code, for example:'
+        make bootstrap
+        make release
+        exit 1
         
         #build-mode: ${{ matrix.build-mode }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -80,15 +87,9 @@ jobs:
     # to build your code.
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-    - if: matrix.build-mode == 'manual'
-      shell: bash
-      run: |
-        #echo 'If you are using a "manual" build mode for one or more of the' \
-          #'languages you are analyzing, replace this with the commands to build' \
-          '#your code, for example:'
-        make bootstrap
-        make release
-        exit 1
+    #- if: matrix.build-mode == 'manual'
+     # shell: bash
+ 
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
