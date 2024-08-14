@@ -84,10 +84,10 @@ jobs:
     - if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        gcc -c code1.c -o sara.o
+        gcc -c code1.c -Iinclude -o sara
         
     - name: Run tests
-      run: ./sara.o
+      run: ./sara
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
