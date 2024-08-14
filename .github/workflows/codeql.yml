@@ -84,7 +84,7 @@ jobs:
     - if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        gcc -c code1.c -Iinclude -o sara
+        gcc code1.c -Iinclude -o sara
         
     - name: Run tests
       run: ./sara
