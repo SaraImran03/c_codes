@@ -1,29 +1,57 @@
-#include <stdio.h>   // For printf
-#include <stdlib.h>  // For rand and srand
-#include <time.h>    // For time
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pcre.h>
 
-// Function prototype
-int getMonthlySales();
+// Global compiled regular expression object
+pcre *re;
 
-int main() {
-    // Initialize random seed
-    srand(time(NULL));
+// Function to initialize the regex
+void init_regex() {
+    const char *error;
+    int erroffset;
 
-    // Declare the totalSales variable
-    int totalSales = 0;
+    // Regular expression pattern to match a specific type of URL
+    char *pattern = "https?://(?:www\\.)?example\\.com/.*";
 
-    // Add the sales for each of the three months to totalSales
-    totalSales += getMonthlySales(); // Sales for month 1
-    totalSales += getMonthlySales(); // Sales for month 2
-    totalSales += getMonthlySales(); // Sales for month 3
-
-    // Print the total sales to the screen
-    printf("Total sales for the quarter: %d\n", totalSales);
-
-    return 0;
+    // Compile the regular expression
+    re = pcre_compile(pattern, 0, &error, &erroffset, NULL);
+    if (re == NULL) {
+        fprintf(stderr, "PCRE compilation failed at offset %d: %s\n", erroffset, error);
+        exit(1);
+    }
 }
 
-// Function to simulate monthly sales generation
-int getMonthlySales() {
-    return rand() % 100001; // Return a random sales number between 0 and 100000
+// Function to check if the URL matches the compiled regex
+const char *match_url(const char *url) {
+    int rc;
+    int ovector[30]; // Output vector for substring information
+
+    rc = pcre_exec(re, NULL, url, strlen(url), 0, 0, ovector, 30);
+    if (rc < 0) {
+        // No match found
+        return "https://defaulturl.com";
+    }
+
+    // If match
+    return url;
+}
+
+int main() {
+    // Initialize the regular expression
+    init_regex();
+
+    // Target URL to check
+    const char *target_url = "https://www.example.com/page";
+    
+    // Get the result, either the matching URL or the default
+    const char *result_url = match_url(target_url);
+
+    // Print the result
+    printf("Redirect URL: %s\n", result_url);
+
+    // Free the compiled regular expression
+    pcre_free(re);
+
+    return 0;
 }
