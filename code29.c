@@ -1,57 +1,79 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <microhttpd.h>
 #include <pcre.h>
 
-// Global compiled regular expression object
-pcre *re;
+#define PORT 8888
 
-// Function to initialize the regex
-void init_regex() {
+// Function to compile the regular expression and check matches
+int check_url(const char *url) {
+    const char *pattern = ".*example\\.com.*";
     const char *error;
     int erroffset;
-
-    // Regular expression pattern to match a specific type of URL
-    char *pattern = "https?://(?:www\\.)?example\\.com/.*";
-
-    // Compile the regular expression
-    re = pcre_compile(pattern, 0, &error, &erroffset, NULL);
+    int rc;
+    int ovector[30];
+    
+    pcre *re = pcre_compile(pattern, PCRE_MULTILINE, &error, &erroffset, NULL);
     if (re == NULL) {
         fprintf(stderr, "PCRE compilation failed at offset %d: %s\n", erroffset, error);
-        exit(1);
+        return 0; // Indicates error in regex compilation
     }
-}
-
-// Function to check if the URL matches the compiled regex
-const char *match_url(const char *url) {
-    int rc;
-    int ovector[30]; // Output vector for substring information
 
     rc = pcre_exec(re, NULL, url, strlen(url), 0, 0, ovector, 30);
-    if (rc < 0) {
-        // No match found
-        return "https://defaulturl.com";
+    pcre_free(re); // Free the compiled pattern
+
+    if (rc < 0)
+        return 0; // No match
+    else
+        return 1; // Match
+}
+
+// Handler for incoming HTTP requests
+int answer_to_connection(void *cls, struct MHD_Connection *connection,
+                         const char *url, const char *method,
+                         const char *version, const char *upload_data,
+                         size_t *upload_data_size, void **con_cls) {
+    struct MHD_Response *response;
+    int ret;
+    const char *param = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "target");
+    
+    if (param == NULL) {
+        // No target provided, redirect to root
+        response = MHD_create_response_from_buffer(strlen("/"),
+                                                   (void *) "/", MHD_RESPMEM_PERSISTENT);
+        ret = MHD_queue_response(connection, MHD_HTTP_FOUND, response);
+        MHD_destroy_response(response);
+        return ret;
     }
 
-    // If match
-    return url;
+    // Check if the URL matches the regex
+    if (check_url(param)) {
+        // Match found, redirect to the target
+        response = MHD_create_response_from_buffer(strlen(param),
+                                                   (void *)param, MHD_RESPMEM_PERSISTENT);
+    } else {
+        // No match, redirect to root
+        response = MHD_create_response_from_buffer(strlen("/"),
+                                                   (void *) "/", MHD_RESPMEM_PERSISTENT);
+    }
+
+    ret = MHD_queue_response(connection, MHD_HTTP_FOUND, response);
+    MHD_destroy_response(response);
+    return ret;
 }
 
 int main() {
-    // Initialize the regular expression
-    init_regex();
+    struct MHD_Daemon *daemon;
 
-    // Target URL to check
-    const char *target_url = "https://www.example.com/page";
-    
-    // Get the result, either the matching URL or the default
-    const char *result_url = match_url(target_url);
+    daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, PORT, NULL, NULL,
+                              &answer_to_connection, NULL, MHD_OPTION_END);
+    if (daemon == NULL)
+        return 1;
 
-    // Print the result
-    printf("Redirect URL: %s\n", result_url);
+    printf("Server running on port %d\n", PORT);
+    getchar(); // Wait for an enter key press to terminate
 
-    // Free the compiled regular expression
-    pcre_free(re);
-
+    MHD_stop_daemon(daemon);
     return 0;
 }
